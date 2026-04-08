@@ -2,11 +2,10 @@
   "name": "chatdoc",
   "version": "0.1.0",
   "private": true,
-  "main": "server.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "node server.js",
+    "start": "next start",
     "lint": "eslint",
     "json-server": "json-server --watch data/db.json --port 3001"
   },

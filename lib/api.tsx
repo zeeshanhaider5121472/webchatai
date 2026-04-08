@@ -1,17 +1,17 @@
 import { ApiResponse, ChatData, WebsiteData1 } from "@/app/page";
 
-const API_URL = "http://localhost:3001/chats";
-const API_URL2 = "http://localhost:3001/Website";
+const API_URL = "https://json-db-api-production.up.railway.app/chats";
+const API_URL2 = "https://json-db-api-production.up.railway.app/Website";
 
 export const deleteAllData = async () => {
   // Delete all chats one by one
-  const chatsRes = await fetch("http://localhost:3001/chats");
+  const chatsRes = await fetch(API_URL);
   const chats = await chatsRes.json();
 
   await Promise.all(
     chats.map((chat: any) =>
-      fetch(`${API_URL}/${chat.id}`, { method: "DELETE" })
-    )
+      fetch(`${API_URL}/${chat.id}`, { method: "DELETE" }),
+    ),
   );
 
   // Reset Website
@@ -23,7 +23,6 @@ export const deleteAllData = async () => {
 
   return { success: true };
 };
-
 
 export const fetchData = async (): Promise<ApiResponse> => {
   const [websiteRes, chatsRes] = await Promise.all([
@@ -71,5 +70,3 @@ export const uploadWebsiteDataDB = async (e: WebsiteData1) => {
   }
   return JSON.parse(text);
 };
-
-
