@@ -1,6 +1,7 @@
+import chromium from "@sparticuz/chromium";
 import * as cheerio from "cheerio";
 import { NextResponse } from "next/server";
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
 
 export async function POST(req: Request) {
   const { url } = await req.json();
@@ -8,9 +9,10 @@ export async function POST(req: Request) {
   try {
     // Launch Puppeteer
     const browser = await puppeteer.launch({
+      args: chromium.args,
+      // defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
       headless: true,
-      executablePath:
-        "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", // adjust path if needed
     });
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: "networkidle2" });
