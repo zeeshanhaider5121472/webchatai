@@ -1,5 +1,6 @@
 "use client";
 import LoaderSpinner from "@/components/loaderspinner";
+import WaveAnimation from "@/components/wave_animation";
 import {
   createPost,
   deleteAllData,
@@ -144,30 +145,32 @@ export default function Home() {
               placeholder="Enter URL to scrape content..."
             ></input>
             <span className="flex gap-2 mt-2">
-            <button
-              type="button"
-              className="px-4 py-2 bg-purple-600 text-white font-semibold rounded-md hover:bg-purple-700 transition"
-              onClick={handleUpdateWebsiteContent}
+              <button
+                type="button"
+                className="px-4 py-2 bg-purple-600 text-white font-semibold rounded-md hover:bg-purple-700 transition"
+                onClick={handleUpdateWebsiteContent}
               >
-              Load Content
-            </button>
-            <button
-              type="button"
-              className="px-4 py-2 bg-red-400 text-white font-semibold rounded-md hover:bg-purple-700 transition"
-              onClick={handleDeleteAll}
+                Load Content
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 bg-red-400 text-white font-semibold rounded-md hover:bg-purple-700 transition"
+                onClick={handleDeleteAll}
               >
-              X
-            </button>
-              </span>
+                X
+              </button>
+            </span>
           </span>
           <Header />
-
-          <ChatViewWindow
-            chats={chats}
-            content={content}
-            isUpdating={isUpdating}
-          />
-
+          {chats.length === 0 ? (
+            <WaveAnimation />
+          ) : (
+            <ChatViewWindow
+              chats={chats}
+              content={content}
+              isUpdating={isUpdating}
+            />
+          )}
           <WriteQuery
             content={content}
             setContent={setContent}
@@ -181,4 +184,3 @@ export default function Home() {
 function deleteData() {
   throw new Error("Function not implemented.");
 }
-

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
 import { ChatData } from "../page";
 
 export default function ChatViewWindow({
@@ -27,14 +28,14 @@ export default function ChatViewWindow({
           .map((chat) => (
             <div key={chat.id} className="mb-15 ">
               <div className="flex justify-end">
-                <p className="py-2 px-4 mb-5 text-right bg-purple-100 border border-gray-50 rounded-2xl whitespace-pre-wrap max-w-lg">
-                  {chat.title}
-                </p>
+                <div className="py-2 px-4 mb-5 text-right bg-purple-100 border border-gray-50 rounded-2xl whitespace-pre-wrap max-w-lg">
+                  <ReactMarkdown>{chat.title}</ReactMarkdown>
+                </div>
               </div>
               <div className="flex justify-start">
-                <p className="p-2 text-left mb-2 whitespace-pre-wrap">
-                  {chat.content}
-                </p>
+                <div className="p-2 text-left mb-2 whitespace-pre-wrap">
+                  <ReactMarkdown>{chat.content}</ReactMarkdown>
+                </div>
               </div>
             </div>
           ))}
