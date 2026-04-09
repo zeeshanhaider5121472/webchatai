@@ -1,14 +1,27 @@
+import chromium from "@sparticuz/chromium";
 import * as cheerio from "cheerio";
 import { NextResponse } from "next/server";
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
+
+export const maxDuration = 60; // Vercel max for Pro, use 10 for Hobby
 
 export async function POST(req: Request) {
   const { url } = await req.json();
 
   try {
+    const isLocal = process.env.NODE_ENV === "development";
+
     const browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: { width: 1280, height: 720 },
+      executablePath: isLocal
+        ? process.platform === "win32"
+          ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+          : process.platform === "darwin"
+            ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+            : "/usr/bin/google-chrome"
+        : await chromium.executablePath(),
       headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
 
     const page = await browser.newPage();
@@ -16,6 +29,7 @@ export async function POST(req: Request) {
 
     const html = await page.content();
     await browser.close();
+
     const $ = cheerio.load(html);
     $(
       "script, style, noscript, iframe, head, nav, footer, .sidebar, .menu",
@@ -38,4 +52,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-//scrape
