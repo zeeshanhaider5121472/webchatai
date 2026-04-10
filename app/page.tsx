@@ -134,7 +134,7 @@ export default function Home() {
       ) : (
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col gap-5 items-start justify-center max-w-2xl w-full p-3"
+          className="flex flex-col gap-5 items-start justify-around max-w-2xl w-full p-3"
         >
           <span className="flex flex-col">
             <input
@@ -144,7 +144,7 @@ export default function Home() {
               className="w-full shadow-purple-50 shadow-md rounded-md p-2"
               placeholder="Enter URL to scrape content..."
             ></input>
-            <span className="flex gap-2 mt-2">
+            <span className="flex gap-2 mt-2 pb-3">
               <button
                 type="button"
                 className="px-4 py-2 bg-purple-600 text-white font-semibold rounded-md hover:bg-purple-700 transition"
@@ -160,8 +160,8 @@ export default function Home() {
                 X
               </button>
             </span>
+            <Header />
           </span>
-          <Header />
           {chats.length === 0 ? (
             <WaveAnimation />
           ) : (
