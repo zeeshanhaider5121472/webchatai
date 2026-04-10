@@ -16,10 +16,6 @@ export default function WaveAnimation() {
       // purple
       "#4c00b0",
       "#4c00b0",
-      "#4c00b0",
-      "#4c00b0",
-      "#7600bc",
-      "#7600bc",
       "#7600bc",
       "#7600bc",
       "#7600bc",
@@ -28,30 +24,16 @@ export default function WaveAnimation() {
       "#8a00c2",
       "#a000c8",
       "#a000c8",
-      "#a000c8",
-      "#a000c8",
       "#b100cd",
       "#b100cd",
       "#b100cd",
-      "#b100cd",
-      "#b100cd",
-      "#be2ed6",
-      "#be2ed6",
-      "#be2ed6",
       "#be2ed6",
       "#be2ed6",
       "#be2ed6",
       "#ca5cdd",
       "#ca5cdd",
-      "#ca5cdd",
-      "#ca5cdd",
       "#da8ee7",
       "#da8ee7",
-      "#da8ee7",
-      "#da8ee7",
-      "#e8bcf0",
-      "#e8bcf0",
-      "#e8bcf0",
       "#e8bcf0",
       "#e8bcf0",
     ];
@@ -68,10 +50,12 @@ export default function WaveAnimation() {
     let pointerY: number | null = null;
 
     function resize() {
+      const dpr = window.devicePixelRatio || 1;
       W = canvas.offsetWidth;
       H = W;
-      canvas.width = W;
-      canvas.height = H;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // scale context
       cx = W / 2;
       cy = H / 2;
       R = W * 0.38;
@@ -102,8 +86,8 @@ export default function WaveAnimation() {
           let intensity = 0.4 + ((wave + 0.26) / 0.52) * 0.6;
           let radius = (0.8 + intensity * 1.4) * DOT_SIZE;
 
-          // pick color from DOT_COLORS array
-          const colorIndex = (r + p) % DOT_COLORS.length;
+          // animate color index with time (t)
+          const colorIndex = Math.floor((r + p + t * 5) % DOT_COLORS.length);
           let fillColor = DOT_COLORS[colorIndex];
 
           // 🎯 Bulge interaction effect
