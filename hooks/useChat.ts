@@ -25,6 +25,7 @@ export function useChat() {
   const [websiteContent, setWebsiteContent] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [isUpdatingWebsite, setIsUpdatingWebsite] = useState(false);
+  const [showWebsiteWriter, setShowWebsiteWriter] = useState(false);
   const [url, setUrl] = useState("");
 
   useEffect(() => {
@@ -115,5 +116,7 @@ export function useChat() {
     handleUpdateWebsiteContent,
     handleSubmit,
     handleDeleteAll,
+    setShowWebsiteWriter,
+    showWebsiteWriter
   };
 }

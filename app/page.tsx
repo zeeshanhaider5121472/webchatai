@@ -19,6 +19,8 @@ export default function Home() {
     handleUpdateWebsiteContent,
     handleSubmit,
     handleDeleteAll,
+    setShowWebsiteWriter,
+    showWebsiteWriter,
   } = useChat();
 
   return (
@@ -35,6 +37,8 @@ export default function Home() {
             setUrl={setUrl}
             handleUpdateWebsiteContent={handleUpdateWebsiteContent}
             handleDeleteAll={handleDeleteAll}
+            setShowWebsiteWriter={setShowWebsiteWriter}
+            showWebsiteWriter={showWebsiteWriter}
           />
           {chats.length === 0 ? (
             <WaveAnimation />
