@@ -1,6 +1,6 @@
+import { ChatData } from "@/hooks/useChat";
 import { useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
-import { ChatData } from "../page";
 
 export default function ChatViewWindow({
   chats,
