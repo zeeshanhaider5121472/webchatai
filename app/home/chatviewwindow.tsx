@@ -32,9 +32,26 @@ export default function ChatViewWindow({
                   <ReactMarkdown>{chat.title}</ReactMarkdown>
                 </div>
               </div>
-              <div className="flex justify-start">
-                <div className="p-2 text-left mb-2 whitespace-pre-wrap">
-                  <ReactMarkdown>{chat.content}</ReactMarkdown>
+              <div className="p-2 text-left mb-2 bg-purple-100 max-w-xl overflow-x-auto">
+                <div className="prose prose-sm max-w-none">
+                  <ReactMarkdown
+                    components={{
+                      pre: ({ node, ...props }) => (
+                        <pre
+                          className="whitespace-pre-wrap break-words"
+                          {...props}
+                        />
+                      ),
+                      code: ({ node, ...props }) => (
+                        <code
+                          className="whitespace-pre-wrap break-words"
+                          {...props}
+                        />
+                      ),
+                    }}
+                  >
+                    {chat.content}
+                  </ReactMarkdown>
                 </div>
               </div>
             </div>
