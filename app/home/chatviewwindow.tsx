@@ -28,23 +28,23 @@ export default function ChatViewWindow({
           .map((chat) => (
             <div key={chat.id} className="mb-15 ">
               <div className="flex justify-end">
-                <div className="py-2 px-4 mb-5 text-right bg-purple-100 border border-gray-50 rounded-2xl whitespace-pre-wrap max-w-lg">
+                <div className="py-2 px-4 mb-5 text-right bg-purple-100 border border-gray-50 rounded-l-2xl rounded-br-2xl whitespace-pre-wrap max-w-lg">
                   <ReactMarkdown>{chat.title}</ReactMarkdown>
                 </div>
               </div>
-              <div className="p-2 text-left mb-2 bg-purple-100 max-w-xl overflow-x-auto">
+              <div className="p-2 text-left mb-2 bg-gray-100 border-gray-50 rounded-r-2xl rounded-bl-2xl max-w-xl overflow-x-auto">
                 <div className="prose prose-sm max-w-none">
                   <ReactMarkdown
                     components={{
                       pre: ({ node, ...props }) => (
                         <pre
-                          className="whitespace-pre-wrap break-words"
+                          className="whitespace-pre-wrap wrap-break-word"
                           {...props}
                         />
                       ),
                       code: ({ node, ...props }) => (
                         <code
-                          className="whitespace-pre-wrap break-words"
+                          className="whitespace-pre-wrap wrap-break-word"
                           {...props}
                         />
                       ),
@@ -60,7 +60,7 @@ export default function ChatViewWindow({
       {isUpdating && (
         <div className="mb-8 ">
           <div className="flex justify-end">
-            <p className="py-2 px-4 mb-5 text-right bg-purple-100 border border-gray-50 rounded-2xl whitespace-pre-wrap max-w-lg">
+            <p className="py-2 px-4 mb-5 text-right bg-purple-100 border border-gray-50 whitespace-pre-wrap max-w-lg">
               {content}
             </p>
           </div>
