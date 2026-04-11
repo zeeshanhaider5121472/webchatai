@@ -1,4 +1,5 @@
-import { ApiResponse, ChatData, WebsiteData1 } from "@/app/page";
+
+import { ApiResponse, ChatData, WebsiteData1 } from "@/hooks/useChat";
 
 const API_URL = "https://json-db-api-production.up.railway.app/chats";
 const API_URL2 = "https://json-db-api-production.up.railway.app/Website";
