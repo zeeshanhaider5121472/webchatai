@@ -1,27 +1,44 @@
 export const runtime = "nodejs";
-export const maxDuration = 60; // Allow up to 60 seconds
+export const maxDuration = 60;
 
 import * as cheerio from "cheerio";
 import { NextResponse } from "next/server";
 
 const isVercel = !!process.env.VERCEL;
 
+// Hardcode these so we don't depend on the bundled export
+const CHROMIUM_ARGS = [
+  "--no-sandbox",
+  "--disable-setuid-sandbox",
+  "--disable-dev-shm-usage",
+  "--disable-gpu",
+  "--single-process",
+  "--no-zygote",
+  "--disable-software-rasterizer",
+  "--disable-extensions",
+  "--window-size=1920,1080",
+];
+
 async function getBrowser() {
   if (isVercel) {
-    const chromium = (await import("@sparticuz/chromium")) as any;
+    const chromium = await import("@sparticuz/chromium") as any;
     const puppeteer = await import("puppeteer-core");
 
+    // Safely extract args — fall back to hardcoded list
+    const args = Array.isArray(chromium.args) ? [...chromium.args, ...CHROMIUM_ARGS] : CHROMIUM_ARGS;
+
+    // Safely extract headless — fall back to "new"
+    const headless = typeof chromium.headless === "string" ? chromium.headless : "new";
+
+    // This is the one thing that MUST come from the package (path to the binary)
+    const executablePath = await chromium.executablePath();
+
+    console.log("[scrape] executablePath:", executablePath);
+
     return puppeteer.launch({
-      args: [
-        ...chromium.args,
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--single-process",
-        "--no-zygote",
-      ],
-      executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
+      args,
+      executablePath,
+      headless,
     });
   } else {
     const puppeteer = await import("puppeteer");
@@ -50,7 +67,7 @@ export async function POST(req: Request) {
     await page.setViewport({ width: 1920, height: 1080 });
     await page.setUserAgent(
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     );
 
     await page.evaluateOnNewDocument(() => {
@@ -66,9 +83,7 @@ export async function POST(req: Request) {
     console.log("[scrape] Browser closed, parsing HTML");
 
     const $ = cheerio.load(html);
-    $(
-      "script, style, noscript, iframe, head, nav, footer, .sidebar, .menu",
-    ).remove();
+    $("script, style, noscript, iframe, head, nav, footer, .sidebar, .menu").remove();
 
     let text = $("body")
       .text()
@@ -87,7 +102,7 @@ export async function POST(req: Request) {
       .get()
       .filter(
         (link): link is string =>
-          typeof link === "string" && link.startsWith("http"),
+          typeof link === "string" && link.startsWith("http")
       );
 
     return NextResponse.json({ scrapedData: { text, links } });
