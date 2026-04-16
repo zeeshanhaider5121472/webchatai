@@ -1,25 +1,30 @@
 export const runtime = "nodejs";
+export const maxDuration = 60; // Allow up to 60 seconds
+
 import * as cheerio from "cheerio";
 import { NextResponse } from "next/server";
 
-// Conditional imports based on environment
 const isVercel = !!process.env.VERCEL;
 
 async function getBrowser() {
   if (isVercel) {
-    // Vercel Environment
-    const chromium = (await import("@sparticuz/chromium-min")) as any;
+    const chromium = (await import("@sparticuz/chromium")) as any;
     const puppeteer = await import("puppeteer-core");
 
     return puppeteer.launch({
-      args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox"],
+      args: [
+        ...chromium.args,
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--single-process",
+        "--no-zygote",
+      ],
       executablePath: await chromium.executablePath(),
       headless: chromium.headless,
     });
   } else {
-    // Local Environment
     const puppeteer = await import("puppeteer");
-
     return puppeteer.launch({
       headless: true,
       args: [
@@ -37,15 +42,17 @@ export async function POST(req: Request) {
   const { url } = await req.json();
 
   try {
+    console.log("[scrape] Launching browser, isVercel:", isVercel);
     const browser = await getBrowser();
-    const page = await browser.newPage();
+    console.log("[scrape] Browser launched");
 
+    const page = await browser.newPage();
     await page.setViewport({ width: 1920, height: 1080 });
     await page.setUserAgent(
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     );
 
-    // Anti-detection script (Replaces the need for stealth plugin)
     await page.evaluateOnNewDocument(() => {
       Object.defineProperty(navigator, "webdriver", { get: () => false });
       Object.defineProperty(navigator, "language", { get: () => "en-US" });
@@ -56,6 +63,7 @@ export async function POST(req: Request) {
 
     const html = await page.content();
     await browser.close();
+    console.log("[scrape] Browser closed, parsing HTML");
 
     const $ = cheerio.load(html);
     $(
@@ -85,6 +93,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ scrapedData: { text, links } });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("[scrape] Error:", message);
+    if (error instanceof Error && error.stack) {
+      console.error("[scrape] Stack:", error.stack);
+    }
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
