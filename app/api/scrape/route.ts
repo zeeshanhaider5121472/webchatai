@@ -9,7 +9,7 @@ async function getBrowser() {
   // if (isVercel) {
   // Vercel Environment
   const chromium = (await import("@sparticuz/chromium-min")) as any;
-  // const puppeteer = await import("puppeteer-core");
+  const puppeteer = await import("puppeteer-core");
 
   return puppeteer.launch({
     args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox"],
