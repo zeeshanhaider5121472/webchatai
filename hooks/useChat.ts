@@ -46,23 +46,33 @@ export function useChat() {
   ) => {
     e.preventDefault();
     setIsUpdatingWebsite(true);
-    const res = await fetch("/api/scrape", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url }),
-    });
-    if (!res.ok) return;
-    const data = await res.json();
 
-    // 👇 Count words correctly from the scraped text
-    const wordCount = data.scrapedData.text.split(/\s+/).filter(Boolean).length;
-    alert(`Scraped ${wordCount} words`);
+    try {
+      const res = await fetch("/api/scrape", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
 
-    const webData = { scrapedData: JSON.stringify(data.scrapedData) };
-    await uploadWebsiteDataDB(webData);
+      // 👇 Count words correctly from the scraped text
+      const wordCount = data.scrapedData.text
+        .split(/\s+/)
+        .filter(Boolean).length;
+      alert(`Scraped ${wordCount} words`);
 
-    setWebsiteContent(data.scrapedData);
-    setIsUpdatingWebsite(false);
+      const webData = { scrapedData: JSON.stringify(data.scrapedData) };
+      await uploadWebsiteDataDB(webData);
+
+      setWebsiteContent(data.scrapedData);
+      setIsUpdatingWebsite(false);
+    } catch (err: any) {
+      // Catch network or unexpected errors
+      alert(`Unexpected error: ${err.message}`);
+    } finally {
+      setIsUpdatingWebsite(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
