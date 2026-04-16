@@ -54,6 +54,10 @@ export function useChat() {
     if (!res.ok) return;
     const data = await res.json();
 
+    // 👇 Count words correctly from the scraped text
+    const wordCount = data.scrapedData.text.split(/\s+/).filter(Boolean).length;
+    alert(`Scraped ${wordCount} words`);
+
     const webData = { scrapedData: JSON.stringify(data.scrapedData) };
     await uploadWebsiteDataDB(webData);
 
@@ -117,6 +121,6 @@ export function useChat() {
     handleSubmit,
     handleDeleteAll,
     setShowWebsiteWriter,
-    showWebsiteWriter
+    showWebsiteWriter,
   };
 }
