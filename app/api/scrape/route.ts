@@ -26,10 +26,10 @@ const CHROMIUM_ARGS = [
 ];
 
 async function getBrowser() {
+  const puppeteer = await import("puppeteer-core");
   if (isVercel) {
     const chromium =
       (await import("@sparticuz/chromium")) as unknown as ChromiumModule;
-    const puppeteer = await import("puppeteer-core");
 
     return puppeteer.launch({
       args: chromium.args,
@@ -37,8 +37,19 @@ async function getBrowser() {
       headless: chromium.headless,
     });
   } else {
-    const puppeteer = await import("puppeteer");
+    // Point to your local Windows Chrome or Edge installation
+    let executablePath = "/usr/bin/google-chrome"; // Default for Mac/Linux
+
+    if (process.platform === "win32") {
+      // Standard Windows Chrome path
+      executablePath =
+        "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+
+      // Alternative: If you don't have Chrome, use Edge (comes with Windows)
+      // executablePath = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
+    }
     return puppeteer.launch({
+      executablePath,
       headless: true,
       args: [
         "--no-sandbox",

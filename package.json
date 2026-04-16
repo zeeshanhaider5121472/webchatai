@@ -30,7 +30,6 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
     "tailwindcss": "^4",
-    "puppeteer": "^21.0.0",
     "typescript": "^5"
   }
 }
