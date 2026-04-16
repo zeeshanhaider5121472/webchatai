@@ -7,6 +7,7 @@ import puppeteer from "puppeteer-core";
 
 export const maxDuration = 60;
 
+// 👇 Chromium is downloaded at runtime from this public URL instead of bundled
 const CHROMIUM_URL =
   "https://github.com/Sparticuz/chromium/releases/download/v131.0.1/chromium-v131.0.1-pack.tar";
 
@@ -16,6 +17,8 @@ export async function POST(req: Request) {
   try {
     const isLocal = process.env.NODE_ENV === "development";
 
+    chromium.setGraphicsMode = false;
+
     const browser = await puppeteer.launch({
       args: isLocal
         ? ["--no-sandbox", "--disable-setuid-sandbox"]
@@ -23,8 +26,7 @@ export async function POST(req: Request) {
       defaultViewport: { width: 1280, height: 720 },
       executablePath: isLocal
         ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-        : await chromium.executablePath(CHROMIUM_URL),
-      // 👇 Just set headless explicitly
+        : await chromium.executablePath(CHROMIUM_URL), // 👈 fetches at runtime
       headless: true,
     });
 
