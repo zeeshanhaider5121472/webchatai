@@ -134,14 +134,22 @@ export async function POST(req: Request) {
 }
 
 const dbPath = path.join(process.cwd(), "db.json");
+const initialDb = { Website: { scrapedData: "" }, chats: [] };
 
 export async function DELETE() {
   try {
-    const raw = fs.readFileSync(dbPath, "utf-8");
-    const db = JSON.parse(raw);
+    let db = initialDb;
+
+    if (fs.existsSync(dbPath)) {
+      const raw = fs.readFileSync(dbPath, "utf-8");
+      db = JSON.parse(raw);
+    }
 
     // Clear chats and optionally Website data
     db.chats = [];
+    if (!db.Website || typeof db.Website !== "object") {
+      db.Website = { scrapedData: "" };
+    }
     db.Website.scrapedData = "";
 
     fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
