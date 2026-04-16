@@ -12,11 +12,11 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@sparticuz/chromium-min": "^147.0.0",
+    "puppeteer-core": "^21.11.0",
     "cheerio": "^1.2.0",
     "groq-sdk": "^1.1.2",
     "json-server": "^1.0.0-beta.15",
     "next": "^16.2.2",
-    "puppeteer-core": "^21.11.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-markdown": "^10.1.0"
