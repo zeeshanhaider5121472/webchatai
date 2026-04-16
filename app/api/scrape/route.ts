@@ -1,20 +1,20 @@
-export const runtime = "nodejs"; // ✅ Must be uncommented for Vercel
+export const runtime = "nodejs";
 
-import chromium from "@sparticuz/chromium";
+import chromium from "@sparticuz/chromium-min";
 import * as cheerio from "cheerio";
 import { NextResponse } from "next/server";
 import puppeteer from "puppeteer-core";
 
 export const maxDuration = 60;
 
+const CHROMIUM_URL =
+  "https://github.com/Sparticuz/chromium/releases/download/v131.0.1/chromium-v131.0.1-pack.tar";
+
 export async function POST(req: Request) {
   const { url } = await req.json();
 
   try {
     const isLocal = process.env.NODE_ENV === "development";
-
-    // 👇 Key fix: set chromium graphics and font flags for Vercel
-    chromium.setGraphicsMode = false;
 
     const browser = await puppeteer.launch({
       args: isLocal
@@ -23,8 +23,9 @@ export async function POST(req: Request) {
       defaultViewport: { width: 1280, height: 720 },
       executablePath: isLocal
         ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-        : await chromium.executablePath(),
-      headless: isLocal ? true : chromium.headless, // 👈 Use chromium.headless on Vercel
+        : await chromium.executablePath(CHROMIUM_URL),
+      // 👇 Just set headless explicitly
+      headless: true,
     });
 
     const page = await browser.newPage();
@@ -63,13 +64,6 @@ export async function POST(req: Request) {
       .replace(/\\u[0-9a-fA-F]{4}/g, "")
       .trim();
 
-    //due to free version of my api
-    // Limit to max 8000 words
-    // const words = text.split(" ");
-    // if (words.length > 8000) {
-    //   text = words.slice(0, 8000).join(" ");
-    // }
-
     const links = $("a")
       .map((_, el) => $(el).attr("href"))
       .get()
@@ -80,6 +74,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+//due to free version of my api
+// Limit to max 8000 words
+// const words = text.split(" ");
+// if (words.length > 8000) {
+//   text = words.slice(0, 8000).join(" ");
+// }
 
 // import chromium from "@sparticuz/chromium";
 // import * as cheerio from "cheerio";
