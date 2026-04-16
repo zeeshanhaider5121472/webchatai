@@ -3,34 +3,34 @@ import * as cheerio from "cheerio";
 import { NextResponse } from "next/server";
 
 // Conditional imports based on environment
-const isVercel = !!process.env.VERCEL;
+// const isVercel = !!process.env.VERCEL;
 
 async function getBrowser() {
-  if (isVercel) {
-    // Vercel Environment
-    const chromium = (await import("@sparticuz/chromium-min")) as any;
-    const puppeteer = await import("puppeteer-core");
+  // if (isVercel) {
+  // Vercel Environment
+  const chromium = (await import("@sparticuz/chromium-min")) as any;
+  // const puppeteer = await import("puppeteer-core");
 
-    return puppeteer.launch({
-      args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox"],
-      executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
-    });
-  } else {
-    // Local Environment
-    const puppeteer = await import("puppeteer");
+  return puppeteer.launch({
+    args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox"],
+    executablePath: await chromium.executablePath(),
+    headless: chromium.headless,
+  });
+  // } else {
+  //   // Local Environment
+  //   const puppeteer = await import("puppeteer");
 
-    return puppeteer.launch({
-      headless: "new",
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-blink-features=AutomationControlled",
-        "--disable-dev-shm-usage",
-        "--window-size=1920,1080",
-      ],
-    });
-  }
+  //   return puppeteer.launch({
+  //     headless: "new",
+  //     args: [
+  //       "--no-sandbox",
+  //       "--disable-setuid-sandbox",
+  //       "--disable-blink-features=AutomationControlled",
+  //       "--disable-dev-shm-usage",
+  //       "--window-size=1920,1080",
+  //     ],
+  //   });
+  // }
 }
 
 export async function POST(req: Request) {
