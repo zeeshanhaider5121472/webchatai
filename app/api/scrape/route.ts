@@ -1,4 +1,4 @@
-// export const runtime = "nodejs";
+export const runtime = "nodejs";
 
 import chromium from "@sparticuz/chromium";
 import * as cheerio from "cheerio";
@@ -13,13 +13,16 @@ export async function POST(req: Request) {
   try {
     const isLocal = process.env.NODE_ENV === "development";
 
+    // 👇 Key fix: set chromium graphics and font flags for Vercel
+    chromium.setGraphicsMode = false;
+
     const browser = await puppeteer.launch({
       args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox"],
       defaultViewport: { width: 1280, height: 720 },
       executablePath: isLocal
         ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
         : await chromium.executablePath(),
-      headless: true,
+      headless: isLocal ? false : chromium.headless,
     });
 
     const page = await browser.newPage();
