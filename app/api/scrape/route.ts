@@ -1,4 +1,4 @@
-export const runtime = "nodejs";
+export const runtime = "nodejs"; // ✅ Must be uncommented for Vercel
 
 import chromium from "@sparticuz/chromium";
 import * as cheerio from "cheerio";
@@ -17,17 +17,18 @@ export async function POST(req: Request) {
     chromium.setGraphicsMode = false;
 
     const browser = await puppeteer.launch({
-      args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox"],
+      args: isLocal
+        ? ["--no-sandbox", "--disable-setuid-sandbox"]
+        : chromium.args,
       defaultViewport: { width: 1280, height: 720 },
       executablePath: isLocal
         ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
         : await chromium.executablePath(),
-      headless: isLocal ? false : chromium.headless,
+      headless: isLocal ? true : chromium.headless, // 👈 Use chromium.headless on Vercel
     });
 
     const page = await browser.newPage();
 
-    // Manual stealth - no extra packages needed
     await page.setUserAgent(
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
     );
