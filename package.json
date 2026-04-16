@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && npx @sparticuz/chromium-min install",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "json-server": "json-server --watch data/db.json --port 3001"
