@@ -1,36 +1,27 @@
 export const runtime = "nodejs";
+// Increase the timeout to 60 seconds (Vercel Pro limit) to allow scraping
+export const maxDuration = 60;
+
 import * as cheerio from "cheerio";
 import { NextResponse } from "next/server";
 
-// Conditional imports based on environment
-// const isVercel = !!process.env.VERCEL;
-
 async function getBrowser() {
-  // if (isVercel) {
-  // Vercel Environment
-  const chromium = (await import("@sparticuz/chromium-min")) as any;
+  // Import the modern package
+  const chromium = (await import("@sparticuz/chromium")) as any;
   const puppeteer = await import("puppeteer-core");
 
   return puppeteer.launch({
-    args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox"],
+    args: [
+      ...chromium.args,
+      "--disable-gpu", // Essential for Vercel
+      "--disable-setuid-sandbox",
+      "--no-sandbox",
+      // Vercel specific fix to handle shared memory
+      "--disable-dev-shm-usage",
+    ],
     executablePath: await chromium.executablePath(),
     headless: chromium.headless,
   });
-  // } else {
-  //   // Local Environment
-  //   const puppeteer = await import("puppeteer");
-
-  //   return puppeteer.launch({
-  //     headless: "new",
-  //     args: [
-  //       "--no-sandbox",
-  //       "--disable-setuid-sandbox",
-  //       "--disable-blink-features=AutomationControlled",
-  //       "--disable-dev-shm-usage",
-  //       "--window-size=1920,1080",
-  //     ],
-  //   });
-  // }
 }
 
 export async function POST(req: Request) {
@@ -45,13 +36,14 @@ export async function POST(req: Request) {
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     );
 
-    // Anti-detection script (Replaces the need for stealth plugin)
+    // Anti-detection script
     await page.evaluateOnNewDocument(() => {
       Object.defineProperty(navigator, "webdriver", { get: () => false });
       Object.defineProperty(navigator, "language", { get: () => "en-US" });
     });
 
-    await page.goto(url, { waitUntil: "networkidle2", timeout: 30000 });
+    // Reduced timeout to prevent function hang if network is slow
+    await page.goto(url, { waitUntil: "networkidle2", timeout: 20000 });
     await new Promise((r) => setTimeout(r, 2000));
 
     const html = await page.content();
@@ -84,6 +76,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ scrapedData: { text, links } });
   } catch (error: unknown) {
+    console.error("Scraping Error:", error); // Log the ACTUAL error for Vercel logs
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
