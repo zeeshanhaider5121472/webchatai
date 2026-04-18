@@ -31,6 +31,6 @@
     "**/*.mts",
     "app/home/writequery.tsx",
     "app/api/scrape/route.ts"
-, "next.config.mjs"  ],
+, "next.config.ts"  ],
   "exclude": ["node_modules"]
 }
