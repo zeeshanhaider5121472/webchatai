@@ -1,5 +1,6 @@
+import { ChatData } from "@/hooks/useChat";
 import { useEffect, useRef } from "react";
-import { ChatData } from "../page";
+import ReactMarkdown from "react-markdown";
 
 export default function ChatViewWindow({
   chats,
@@ -27,14 +28,31 @@ export default function ChatViewWindow({
           .map((chat) => (
             <div key={chat.id} className="mb-15 ">
               <div className="flex justify-end">
-                <p className="py-2 px-4 mb-5 text-right bg-purple-100 border border-gray-50 rounded-2xl whitespace-pre-wrap max-w-lg">
-                  {chat.title}
-                </p>
+                <div className="py-2 px-4 mb-5 text-right bg-purple-100 border border-gray-50 rounded-l-2xl rounded-br-2xl whitespace-pre-wrap max-w-lg">
+                  <ReactMarkdown>{chat.title}</ReactMarkdown>
+                </div>
               </div>
-              <div className="flex justify-start">
-                <p className="p-2 text-left mb-2 whitespace-pre-wrap">
-                  {chat.content}
-                </p>
+              <div className="p-2 text-left mb-2 bg-gray-100 border-gray-50 rounded-r-2xl rounded-bl-2xl max-w-xl overflow-x-auto">
+                <div className="prose prose-sm max-w-none">
+                  <ReactMarkdown
+                    components={{
+                      pre: ({ node, ...props }) => (
+                        <pre
+                          className="whitespace-pre-wrap wrap-break-word"
+                          {...props}
+                        />
+                      ),
+                      code: ({ node, ...props }) => (
+                        <code
+                          className="whitespace-pre-wrap wrap-break-word"
+                          {...props}
+                        />
+                      ),
+                    }}
+                  >
+                    {chat.content}
+                  </ReactMarkdown>
+                </div>
               </div>
             </div>
           ))}
@@ -42,7 +60,7 @@ export default function ChatViewWindow({
       {isUpdating && (
         <div className="mb-8 ">
           <div className="flex justify-end">
-            <p className="py-2 px-4 mb-5 text-right bg-purple-100 border border-gray-50 rounded-2xl whitespace-pre-wrap max-w-lg">
+            <p className="py-2 px-4 mb-5 text-right bg-purple-100 border border-gray-50 whitespace-pre-wrap max-w-lg">
               {content}
             </p>
           </div>
