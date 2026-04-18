@@ -1,92 +1,39 @@
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-import chromium from "@sparticuz/chromium"; // Import at the top
 import * as cheerio from "cheerio";
 import { NextResponse } from "next/server";
-
-// You can keep your extra args, but chromium.args includes the vital ones
-const EXTRA_ARGS = [
-  "--disable-component-update",
-  "--disable-domain-reliability",
-  "--disable-features=AudioServiceOutOfProcess,IsolateOrigins,site-per-process",
-  "--disable-print-preview",
-  "--disable-site-isolation-trials",
-  "--disable-speech-api",
-  "--disable-background-networking",
-  "--disable-default-apps",
-  "--disable-gpu",
-  "--disable-infobars",
-  "--disable-dev-shm-usage",
-  "--disable-translate",
-  "--disable-sync",
-  "--hide-scrollbars",
-  "--mute-audio",
-  "--no-default-browser-check",
-  "--no-first-run",
-  "--no-pings",
-  "--no-sandbox",
-  "--no-zygote",
-  "--password-store=basic",
-  "--use-gl=swiftshader",
-  "--use-mock-keychain",
-  "--single-process",
-];
-
-async function getBrowser() {
-  const puppeteer = await import("puppeteer-core");
-
-  if (process.env.VERCEL) {
-    console.log("[scrape] Vercel Exec Path:", chromium.executablePath);
-
-    return puppeteer.launch({
-      args: [...chromium.args, ...EXTRA_ARGS],
-      executablePath: await chromium.executablePath(),
-      headless: chromium.headless as boolean, // <-- Add "as boolean" here just in case
-      ignoreHTTPSErrors: true,
-    });
-  }
-
-  // Local dev
-  const localChrome =
-    process.platform === "win32"
-      ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-      : process.platform === "darwin"
-        ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-        : "/usr/bin/google-chrome";
-
-  return puppeteer.launch({
-    executablePath: localChrome,
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
-}
 
 export async function POST(req: Request) {
   const { url } = await req.json();
 
-  let browser;
   try {
-    console.log("[scrape] Launching browser, isVercel:", !!process.env.VERCEL);
-    browser = await getBrowser();
-    console.log("[scrape] Browser launched");
+    console.log("[scrape] Fetching via ScrapingBee:", url);
 
-    const page = await browser.newPage();
-    await page.setViewport({ width: 1280, height: 720 });
-    await page.setUserAgent(
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-        "(KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    const params = new URLSearchParams({
+      api_key: process.env.SCRAPINGBEE_API_KEY!,
+      url: url,
+      render_js: "false",   // keeps it 1 credit per call instead of 5
+      block_ads: "true",
+      block_resources: "true",
+    });
+
+    const response = await fetch(
+      `https://app.scrapingbee.com/api/v1/?${params.toString()}`
     );
 
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 25000 });
-    await new Promise((r) => setTimeout(r, 2000));
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("[scrape] ScrapingBee error:", response.status, errText);
+      throw new Error(`ScrapingBee returned ${response.status}: ${errText}`);
+    }
 
-    const html = await page.content();
+    const html = await response.text();
     console.log("[scrape] Got HTML, length:", html.length);
 
     const $ = cheerio.load(html);
     $(
-      "script, style, noscript, iframe, head, nav, footer, .sidebar, .menu",
+      "script, style, noscript, iframe, head, nav, footer, .sidebar, .menu"
     ).remove();
 
     let text = $("body")
@@ -105,21 +52,15 @@ export async function POST(req: Request) {
       .get()
       .filter(
         (link): link is string =>
-          typeof link === "string" && link.startsWith("http"),
+          typeof link === "string" && link.startsWith("http")
       );
 
     return NextResponse.json({ scrapedData: { text, links } });
+
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("[scrape] Error:", message);
-    if (error instanceof Error && error.stack) {
-      console.error("[scrape] Stack:", error.stack);
-    }
     return NextResponse.json({ error: message }, { status: 500 });
-  } finally {
-    if (browser) {
-      await browser.close().catch(() => {});
-    }
   }
 }
 
