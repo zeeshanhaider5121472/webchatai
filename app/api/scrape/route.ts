@@ -13,13 +13,14 @@ export async function POST(req: Request) {
     const params = new URLSearchParams({
       api_key: process.env.SCRAPINGBEE_API_KEY!,
       url: url,
-      render_js: "false",   // keeps it 1 credit per call instead of 5
+      render_js: "true", // ← change this
       block_ads: "true",
       block_resources: "true",
+      wait: "2000", // wait 2s for JS to load
     });
 
     const response = await fetch(
-      `https://app.scrapingbee.com/api/v1/?${params.toString()}`
+      `https://app.scrapingbee.com/api/v1/?${params.toString()}`,
     );
 
     if (!response.ok) {
@@ -32,16 +33,38 @@ export async function POST(req: Request) {
     console.log("[scrape] Got HTML, length:", html.length);
 
     const $ = cheerio.load(html);
-    $(
-      "script, style, noscript, iframe, head, nav, footer, .sidebar, .menu"
-    ).remove();
 
-    let text = $("body")
-      .text()
-      .replace(/[\t\r\n]+/g, " ")
-      .replace(/\s{2,}/g, " ")
-      .trim();
+    // Remove only truly useless elements
+    $("script, style, noscript, iframe").remove();
 
+    // Try to get main content first, fall back to full body
+    const mainSelectors = [
+      "main",
+      "article",
+      "[role='main']",
+      "#content",
+      "#main",
+      ".content",
+      "body",
+    ];
+    let text = "";
+
+    for (const selector of mainSelectors) {
+      const el = $(selector);
+      if (el.length) {
+        text = el
+          .text()
+          .replace(/[\t\r\n]+/g, " ")
+          .replace(/\s{2,}/g, " ")
+          .trim();
+        if (text.length > 100) break; // found something useful
+      }
+    }
+
+    console.log("[scrape] Extracted text length:", text.length);
+
+    //due to free version of my api
+    // Limit to max 8000 words
     const words = text.split(" ");
     if (words.length > 8000) {
       text = words.slice(0, 8000).join(" ");
@@ -52,11 +75,10 @@ export async function POST(req: Request) {
       .get()
       .filter(
         (link): link is string =>
-          typeof link === "string" && link.startsWith("http")
+          typeof link === "string" && link.startsWith("http"),
       );
 
     return NextResponse.json({ scrapedData: { text, links } });
-
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("[scrape] Error:", message);
