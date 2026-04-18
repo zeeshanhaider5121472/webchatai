@@ -4,7 +4,6 @@ export const maxDuration = 60;
 import chromium from "@sparticuz/chromium"; // Import at the top
 import * as cheerio from "cheerio";
 import { NextResponse } from "next/server";
-import { execPath } from "process";
 
 // You can keep your extra args, but chromium.args includes the vital ones
 const EXTRA_ARGS = [
@@ -42,7 +41,7 @@ async function getBrowser() {
 
     return puppeteer.launch({
       args: [...chromium.args, ...EXTRA_ARGS],
-      executablePath: execPath, // now a string// <-- Add "as string" here
+      executablePath: await chromium.executablePath(),
       headless: chromium.headless as boolean, // <-- Add "as boolean" here just in case
       ignoreHTTPSErrors: true,
     });
