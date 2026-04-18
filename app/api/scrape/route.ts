@@ -5,12 +5,12 @@ import * as cheerio from "cheerio";
 import { NextResponse } from "next/server";
 
 const isVercel = !!process.env.VERCEL;
-interface ChromiumModule {
-  executablePath: string;
-  args: string[];
-  headless: "new" | boolean;
-  defaultViewport?: { width: number; height: number };
-}
+// interface ChromiumModule {
+//   executablePath: string;
+//   args: string[];
+//   headless: "new" | boolean;
+//   defaultViewport?: { width: number; height: number };
+// }
 
 // Hardcode these so we don't depend on the bundled export
 const CHROMIUM_ARGS = [
@@ -29,7 +29,7 @@ async function getBrowser() {
   const puppeteer = await import("puppeteer-core");
 
   if (isVercel) {
-    const chromiumModule = await import("@sparticuz/chromium");
+    const chromiumModule = await import("@sparticuz/chromium-min");
     const chromium = (chromiumModule.default || chromiumModule) as any;
 
     // v131+ executablePath() requires passing the remote URL or undefined
