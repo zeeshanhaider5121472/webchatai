@@ -29,41 +29,33 @@ async function getBrowser() {
   const puppeteer = await import("puppeteer-core");
 
   if (isVercel) {
-    // Failsafe ESM import: handles both default and named exports
     const chromiumModule = await import("@sparticuz/chromium");
-    const chromium = chromiumModule.default || chromiumModule;
+    const chromium = (chromiumModule.default || chromiumModule) as any;
 
-    // Safely handle executablePath being a string (new) or function (old)
-    const rawPath = (chromium as any).executablePath;
-    const executablePath =
-      typeof rawPath === "function" ? await rawPath() : rawPath;
-
-    // Safely get args (always ensure no-sandbox is present)
-    const args = Array.isArray(chromium.args)
-      ? [...chromium.args, "--no-sandbox"]
-      : ["--no-sandbox", "--disable-setuid-sandbox"];
+    // v131+ executablePath() requires passing the remote URL or undefined
+    const executablePath = await chromium.executablePath(
+      // Pass the remote chromium URL for Vercel, or undefined to use bundled
+      process.env.CHROMIUM_REMOTE_EXEC_PATH || undefined,
+    );
 
     return puppeteer.launch({
-      args,
-      executablePath: executablePath,
-      headless: chromium.headless || true,
+      args: [...(chromium.args ?? CHROMIUM_ARGS), "--no-sandbox"],
+      executablePath,
+      headless: chromium.headless ?? true,
     });
   } else {
     let executablePath = "/usr/bin/google-chrome";
     if (process.platform === "win32") {
       executablePath =
         "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+    } else if (process.platform === "darwin") {
+      executablePath =
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
     }
     return puppeteer.launch({
       executablePath,
       headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-blink-features=AutomationControlled",
-        "--disable-dev-shm-usage",
-        "--window-size=1920,1080",
-      ],
+      args: CHROMIUM_ARGS,
     });
   }
 }
