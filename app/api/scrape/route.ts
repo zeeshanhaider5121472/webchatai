@@ -4,88 +4,95 @@ export const maxDuration = 60;
 import * as cheerio from "cheerio";
 import { NextResponse } from "next/server";
 
-const isVercel = !!process.env.VERCEL;
-// interface ChromiumModule {
-//   executablePath: string;
-//   args: string[];
-//   headless: "new" | boolean;
-//   defaultViewport?: { width: number; height: number };
-// }
-
-// Hardcode these so we don't depend on the bundled export
 const CHROMIUM_ARGS = [
-  "--no-sandbox",
+  "--allow-running-insecure-content",
+  "--autoplay-policy=user-gesture-required",
+  "--disable-component-update",
+  "--disable-domain-reliability",
+  "--disable-features=AudioServiceOutOfProcess,IsolateOrigins,site-per-process",
+  "--disable-print-preview",
   "--disable-setuid-sandbox",
-  "--disable-dev-shm-usage",
-  "--disable-gpu",
-  "--single-process",
-  "--no-zygote",
-  "--disable-software-rasterizer",
+  "--disable-site-isolation-trials",
+  "--disable-speech-api",
+  "--disable-background-networking",
+  "--disable-default-apps",
   "--disable-extensions",
-  "--window-size=1920,1080",
+  "--disable-gpu",
+  "--disable-infobars",
+  "--disable-dev-shm-usage",
+  "--disable-translate",
+  "--disable-sync",
+  "--hide-scrollbars",
+  "--ignore-gpu-blocklist",
+  "--metrics-recording-only",
+  "--mute-audio",
+  "--no-default-browser-check",
+  "--no-first-run",
+  "--no-pings",
+  "--no-sandbox",
+  "--no-zygote",
+  "--password-store=basic",
+  "--use-gl=swiftshader",
+  "--use-mock-keychain",
+  "--single-process",
 ];
 
 async function getBrowser() {
   const puppeteer = await import("puppeteer-core");
 
-  if (isVercel) {
-    const chromiumModule = await import("@sparticuz/chromium-min");
-    const chromium = (chromiumModule.default || chromiumModule) as any;
+  if (process.env.VERCEL) {
+    const chromium = (await import("@sparticuz/chromium-min")).default;
 
-    // v131+ executablePath() requires passing the remote URL or undefined
-    const executablePath = await chromium.executablePath(
-      // Pass the remote chromium URL for Vercel, or undefined to use bundled
-      process.env.CHROMIUM_REMOTE_EXEC_PATH || undefined,
+    const execPath = await chromium.executablePath(
+      process.env.CHROMIUM_REMOTE_EXEC_PATH!,
     );
 
+    console.log("[scrape] executablePath:", execPath);
+
     return puppeteer.launch({
-      args: [...(chromium.args ?? CHROMIUM_ARGS), "--no-sandbox"],
-      executablePath,
-      headless: chromium.headless ?? true,
-    });
-  } else {
-    let executablePath = "/usr/bin/google-chrome";
-    if (process.platform === "win32") {
-      executablePath =
-        "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
-    } else if (process.platform === "darwin") {
-      executablePath =
-        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-    }
-    return puppeteer.launch({
-      executablePath,
-      headless: true,
       args: CHROMIUM_ARGS,
+      executablePath: execPath,
+      headless: true,
+      ignoreHTTPSErrors: true,
     });
   }
+
+  // Local dev
+  const localChrome =
+    process.platform === "win32"
+      ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+      : process.platform === "darwin"
+        ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        : "/usr/bin/google-chrome";
+
+  return puppeteer.launch({
+    executablePath: localChrome,
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
 }
 
 export async function POST(req: Request) {
   const { url } = await req.json();
 
+  let browser;
   try {
-    console.log("[scrape] Launching browser, isVercel:", isVercel);
-    const browser = await getBrowser();
+    console.log("[scrape] Launching browser, isVercel:", !!process.env.VERCEL);
+    browser = await getBrowser();
     console.log("[scrape] Browser launched");
 
     const page = await browser.newPage();
-    await page.setViewport({ width: 1920, height: 1080 });
+    await page.setViewport({ width: 1280, height: 720 });
     await page.setUserAgent(
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "(KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
     );
 
-    await page.evaluateOnNewDocument(() => {
-      Object.defineProperty(navigator, "webdriver", { get: () => false });
-      Object.defineProperty(navigator, "language", { get: () => "en-US" });
-    });
-
-    await page.goto(url, { waitUntil: "networkidle2", timeout: 30000 });
-    await new Promise((r) => setTimeout(r, 3000));
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 25000 });
+    await new Promise((r) => setTimeout(r, 2000));
 
     const html = await page.content();
-    await browser.close();
-    console.log("[scrape] Browser closed, parsing HTML");
+    console.log("[scrape] Got HTML, length:", html.length);
 
     const $ = cheerio.load(html);
     $(
@@ -96,7 +103,6 @@ export async function POST(req: Request) {
       .text()
       .replace(/[\t\r\n]+/g, " ")
       .replace(/\s{2,}/g, " ")
-      .replace(/\\u[0-9a-fA-F]{4}/g, "")
       .trim();
 
     const words = text.split(" ");
@@ -120,6 +126,10 @@ export async function POST(req: Request) {
       console.error("[scrape] Stack:", error.stack);
     }
     return NextResponse.json({ error: message }, { status: 500 });
+  } finally {
+    if (browser) {
+      await browser.close().catch(() => {});
+    }
   }
 }
 
