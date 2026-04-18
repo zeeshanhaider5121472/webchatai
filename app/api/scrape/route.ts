@@ -41,8 +41,8 @@ async function getBrowser() {
 
     return puppeteer.launch({
       args: [...chromium.args, ...EXTRA_ARGS],
-      executablePath: chromium.executablePath, // <-- NO "await", NO "()"
-      headless: chromium.headless,             // <-- Use the built-in header
+      executablePath: chromium.executablePath as unknown as string, // <-- Add "as string" here
+      headless: chromium.headless as boolean,            // <-- Add "as boolean" here just in case
       ignoreHTTPSErrors: true,
     });
   }
