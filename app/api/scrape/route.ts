@@ -29,31 +29,30 @@ async function getBrowser() {
   const puppeteer = await import("puppeteer-core");
 
   if (isVercel) {
-    const chromium =
-      (await import("@sparticuz/chromium")) as unknown as ChromiumModule;
+    // Failsafe ESM import: handles both default and named exports
+    const chromiumModule = await import("@sparticuz/chromium");
+    const chromium = chromiumModule.default || chromiumModule;
 
-    // This handles BOTH the old version (function) and new version (string)!
-    const rawPath = chromium.executablePath;
+    // Safely handle executablePath being a string (new) or function (old)
+    const rawPath = (chromium as any).executablePath;
     const executablePath =
-      typeof rawPath === "function"
-        ? await (rawPath as () => Promise<string>)()
-        : rawPath;
+      typeof rawPath === "function" ? await rawPath() : rawPath;
+
+    // Safely get args (always ensure no-sandbox is present)
+    const args = Array.isArray(chromium.args)
+      ? [...chromium.args, "--no-sandbox"]
+      : ["--no-sandbox", "--disable-setuid-sandbox"];
 
     return puppeteer.launch({
-      args: chromium.args,
-      executablePath: executablePath, // Now guaranteed to be a string
-      headless: true,
+      args,
+      executablePath: executablePath,
+      headless: chromium.headless || true,
     });
   } else {
-    // Point to your local Windows Chrome or Edge installation
-    let executablePath = "/usr/bin/google-chrome"; // Default for Mac/Linux
-
+    let executablePath = "/usr/bin/google-chrome";
     if (process.platform === "win32") {
-      // Standard Windows Chrome path
       executablePath =
         "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
-      // Alternative: If you don't have Chrome, use Edge (comes with Windows)
-      // executablePath = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
     }
     return puppeteer.launch({
       executablePath,
