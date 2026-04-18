@@ -3,28 +3,24 @@ export const maxDuration = 60;
 
 import * as cheerio from "cheerio";
 import { NextResponse } from "next/server";
+import chromium from "@sparticuz/chromium"; // Import at the top
 
-const CHROMIUM_ARGS = [
-  "--allow-running-insecure-content",
-  "--autoplay-policy=user-gesture-required",
+// You can keep your extra args, but chromium.args includes the vital ones
+const EXTRA_ARGS = [
   "--disable-component-update",
   "--disable-domain-reliability",
   "--disable-features=AudioServiceOutOfProcess,IsolateOrigins,site-per-process",
   "--disable-print-preview",
-  "--disable-setuid-sandbox",
   "--disable-site-isolation-trials",
   "--disable-speech-api",
   "--disable-background-networking",
   "--disable-default-apps",
-  "--disable-extensions",
   "--disable-gpu",
   "--disable-infobars",
   "--disable-dev-shm-usage",
   "--disable-translate",
   "--disable-sync",
   "--hide-scrollbars",
-  "--ignore-gpu-blocklist",
-  "--metrics-recording-only",
   "--mute-audio",
   "--no-default-browser-check",
   "--no-first-run",
@@ -41,18 +37,12 @@ async function getBrowser() {
   const puppeteer = await import("puppeteer-core");
 
   if (process.env.VERCEL) {
-    const chromium = (await import("@sparticuz/chromium-min")).default;
-
-    const execPath = await chromium.executablePath(
-      process.env.CHROMIUM_REMOTE_EXEC_PATH!,
-    );
-
-    console.log("[scrape] executablePath:", execPath);
+    console.log("[scrape] Vercel Exec Path:", chromium.executablePath);
 
     return puppeteer.launch({
-      args: CHROMIUM_ARGS,
-      executablePath: execPath,
-      headless: true,
+      args: [...chromium.args, ...EXTRA_ARGS],
+      executablePath: chromium.executablePath, // <-- NO "await", NO "()"
+      headless: chromium.headless,             // <-- Use the built-in header
       ignoreHTTPSErrors: true,
     });
   }
