@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "rm -rf node_modules && npm install && next build --webpack",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "json-server": "json-server --watch db.json --port 3001"
